@@ -1,18 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
-const port = 5000;
+const port = 3000;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-
 const uri =
   "mongodb+srv://parlour:vyYSoGlfEA2G7XtU@cluster0.9bycbcd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -25,13 +23,55 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    const usersCollection = client.db("parlour").collection("usersDB");
+
+    // create user (register)
+    app.post("/user-register", async (req, res) => {
+      const body = req.body;
+      try {
+        const result = await usersCollection.insertOne(body);
+        res.status(201).json(result);
+      } catch (error) {
+        console.error("Error registering user:", error);
+        res
+          .status(500)
+          .json({ error: "Internal Server Error", message: error.message });
+      }
+    });
+
+    // get all user from database
+    app.get("/user-get", async (req, res) => {
+      try {
+        const result = await usersCollection.find().toArray();
+        res.status(201).json(result);
+      } catch (e) {
+        console.error("Error find user:", error);
+        res
+          .status(500)
+          .json({ error: "Internal Server Error", message: error.message });
+      }
+    });
+
+    // get single user from database
+    app.get("/user-data/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await usersCollection.findOne(query);
+        res.status(201).json(result);
+      } catch (e) {
+        console.error("Error find user:", error);
+        res
+          .status(500)
+          .json({ error: "Internal Server Error", message: error.message });
+      }
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    
   }
 }
 run().catch(console.dir);
