@@ -30,12 +30,12 @@ async function run() {
       const body = req.body;
       try {
         const result = await usersCollection.insertOne(body);
-        res.status(201).json(result);
+        res.status(201).send(result);
       } catch (error) {
         console.error("Error registering user:", error);
         res
           .status(500)
-          .json({ error: "Internal Server Error", message: error.message });
+          .send({ error: "Internal Server Error", message: error.message });
       }
     });
 
@@ -43,12 +43,12 @@ async function run() {
     app.get("/user-get", async (req, res) => {
       try {
         const result = await usersCollection.find().toArray();
-        res.status(201).json(result);
+        res.status(201).send(result);
       } catch (e) {
         console.error("Error find user:", error);
         res
           .status(500)
-          .json({ error: "Internal Server Error", message: error.message });
+          .send({ error: "Internal Server Error", message: error.message });
       }
     });
 
@@ -58,12 +58,28 @@ async function run() {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
         const result = await usersCollection.findOne(query);
-        res.status(201).json(result);
+        res.status(201).send(result);
       } catch (e) {
         console.error("Error find user:", error);
         res
           .status(500)
-          .json({ error: "Internal Server Error", message: error.message });
+          .send({ error: "Internal Server Error", message: error.message });
+      }
+    });
+
+    // update user
+    app.patch("/user-update/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const body = req.body;
+        const result = await usersCollection.updateOne(query, { $set: body });
+        res.status(201).send(result);
+      } catch (e) {
+        console.error("Error find user:", error);
+        res
+          .status(500)
+          .send({ error: "Internal Server Error", message: error.message });
       }
     });
 
